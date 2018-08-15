@@ -10,15 +10,20 @@ final class Post: Model {
     /// The content of the post
     var content: String
     
+    /// The owner of the post
+    var ownerId: String
+    
     /// The column names for `id` and `content` in the database
     struct Keys {
         static let id = "id"
         static let content = "content"
+        static let ownerId = "ownerId"
     }
 
     /// Creates a new Post
-    init(content: String) {
+    init(content: String, ownerId: String) {
         self.content = content
+        self.ownerId = ownerId
     }
 
     // MARK: Fluent Serialization
@@ -27,12 +32,14 @@ final class Post: Model {
     /// database row
     init(row: Row) throws {
         content = try row.get(Post.Keys.content)
+        ownerId = try row.get(Post.Keys.ownerId)
     }
 
     // Serializes the Post to the database
     func makeRow() throws -> Row {
         var row = Row()
         try row.set(Post.Keys.content, content)
+        try row.set(Post.Keys.ownerId, ownerId)
         return row
     }
 }
@@ -46,6 +53,7 @@ extension Post: Preparation {
         try database.create(self) { builder in
             builder.id()
             builder.string(Post.Keys.content)
+            builder.string(Post.Keys.ownerId)
         }
     }
 
@@ -65,7 +73,8 @@ extension Post: Preparation {
 extension Post: JSONConvertible {
     convenience init(json: JSON) throws {
         self.init(
-            content: try json.get(Post.Keys.content)
+            content: try json.get(Post.Keys.content),
+            ownerId: try json.get(Post.Keys.ownerId)
         )
     }
     
@@ -73,6 +82,7 @@ extension Post: JSONConvertible {
         var json = JSON()
         try json.set(Post.Keys.id, id)
         try json.set(Post.Keys.content, content)
+        try json.set(Post.Keys.ownerId, ownerId)
         return json
     }
 }
@@ -96,6 +106,10 @@ extension Post: Updateable {
             // the setter callback will be called.
             UpdateableKey(Post.Keys.content, String.self) { post, content in
                 post.content = content
+            },
+            
+            UpdateableKey(Post.Keys.ownerId, String.self) { post, ownerId in
+                post.ownerId = ownerId
             }
         ]
     }

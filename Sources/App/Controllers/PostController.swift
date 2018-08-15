@@ -88,8 +88,13 @@ extension Request {
     /// return BadRequest error if invalid 
     /// or no JSON
     func post() throws -> Post {
+        
         guard let json = json else { throw Abort.badRequest }
-        return try Post(json: json)
+        let user = try self.user()
+        let postJson = try JSON(node: [Post.Keys.ownerId : user.id?.string!,
+                                       Post.Keys.content : json[Post.Keys.content]?.string])
+       
+        return try Post(json: postJson)
     }
 }
 
